@@ -183,9 +183,9 @@ st.write(f"Escenario Activo: **{nombre_evento}**")
 # ==========================================
 
 # Ajuste de parámetros por Stress Test
-    mu_sim = p_ret_hist + shock_mu
-    # Simplificación: incrementamos la volatilidad y forzamos correlación positiva en crisis
-    vol_sim = p_vol_hist * shock_sigma + (shock_corr * 0.1)
+mu_sim = p_ret_hist + shock_mu
+# Simplificación: incrementamos la volatilidad y forzamos correlación positiva en crisis
+vol_sim = p_vol_hist * shock_sigma + (shock_corr * 0.1)
 
     simulaciones = 1000
     dias = 252
