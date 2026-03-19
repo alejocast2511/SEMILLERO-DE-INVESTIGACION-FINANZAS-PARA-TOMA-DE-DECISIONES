@@ -168,7 +168,7 @@ with c_s2:
     if st.button("Pandemia"):
             shock_mu, shock_sigma, shock_corr, nombre_evento = -0.10, 2.2, 0.2, "Pandemia"
             st.warning("Efecto: Volatilidad extrema.")
- with c_s3:
+with c_s3:
     if st.button("🏗️ Aranceles"):
             shock_mu, shock_sigma, nombre_evento = -0.06, 1.3, "Choque Arancelario"
             st.warning("Efecto: Reducción de retornos en exportación.")
