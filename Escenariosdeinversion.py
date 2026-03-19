@@ -77,7 +77,7 @@ with st.sidebar:
 # ==========================================
 # 2. SELECCIÓN DE ACTIVOS Y DATOS
 # ==========================================
-st.header(f" Análisis del Portafolio Sugerido {perfil}")
+st.header(f" Análisis del Portafolio Sugerido: {perfil}")
 tickers_input = st.text_input("Activos (separaDOS por coma):", ",".join(tickers_sugeridos))
 tickers = [t.strip() for t in tickers_input.split(",")]
 
@@ -96,7 +96,7 @@ if not data.empty:
     cov_matrix = returns.cov() * 252
     
     # Visualización de Crecimiento Relativo
-    st.subheader("📈 Crecimiento Relativo (Base 100 desde 2019)")
+    st.subheader("📈 PRECIOS HISTORICOS (Base 100)")
     data_norm = (data / data.iloc[0]) * 100
     st.line_chart(data_norm)
 
@@ -108,7 +108,7 @@ if not data.empty:
     
     with col_opt:
         st.write("Calcula la distribución ideal para el menor riesgo posible.")
-        if st.button("🚀 Optimizar para Mínima Varianza"):
+        if st.button("Optimizar para Mínima Varianza"):
             n = len(tickers)
             def p_vol(weights):
                 return np.sqrt(np.dot(weights.T, np.dot(cov_matrix, weights)))
