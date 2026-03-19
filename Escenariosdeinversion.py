@@ -241,8 +241,8 @@ with col_res2:
     st.write(f"**Incertidumbre:** Tu volatilidad ajustada es de **{vol_sim:.2%}**. Esto significa que el valor de tu dinero podría oscilar violentamente en un año.")
     st.write(f"**Pronóstico:** En el peor 5% de los casos, podrías perder **${abs(peor_escenario):,.2f}**.")
     st.write(f"**Eficiencia:** Tu Ratio de Sharpe indica qué tan bien se te paga por el susto que pasas al invertir.")
-else:
-    st.warning("Por favor, ingresa tickers válidos para comenzar el análisis.")
+    else:
+        st.warning("Por favor, ingresa tickers válidos para comenzar el análisis.")
 
 from fpdf import FPDF
 import base64
