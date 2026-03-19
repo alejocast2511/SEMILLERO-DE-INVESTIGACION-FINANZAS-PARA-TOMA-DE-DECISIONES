@@ -4,5 +4,5 @@ Pandas
 numpy
 matplotlib
 plotly
-qrcode
+Fpdf
 scipy
