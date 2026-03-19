@@ -11,7 +11,6 @@ Original file is located at
 Proyecto: Análisis de portafolios de inversión por Simulación Monte Carlo
 
 """
-!pip install yfinance streamlit pyngrok scipy pandas numpy matplotlib
 # %%writefile app.py
 
 # ==== 1 Importar librerías ====
