@@ -183,8 +183,13 @@ st.write(f"Escenario Activo: **{nombre_evento}**")
 # ==========================================
 
 # Ajuste de parámetros por Stress Test
+p_ret_hist = np.dot(pesos, mu)
+p_vol_hist = np.sqrt(np.dot(pesos.T, np.dot(cov_matrix, pesos)))
+
+monto_inicial = monto
+score_conocimiento = score
+
 mu_sim = p_ret_hist + shock_mu
-# Simplificación: incrementamos la volatilidad y forzamos correlación positiva en crisis
 vol_sim = p_vol_hist * shock_sigma + (shock_corr * 0.1)
 
 simulaciones = 1000
@@ -192,24 +197,23 @@ dias = 252
 resultados = np.zeros((dias, simulaciones))
 
 for i in range(simulaciones):
-     rets_sim = np.random.normal(mu_sim/dias, vol_sim/np.sqrt(dias), dias)
+    rets_sim = np.random.normal(mu_sim/dias, vol_sim/np.sqrt(dias), dias)
     resultados[:, i] = monto_inicial * (1 + rets_sim).cumprod()
 
- # Gráficos de resultados
 st.subheader(f"📊 Proyección a 1 año: Escenario {nombre_evento}")
-    
- col_g1, col_g2 = st.columns([2, 1])
-    
- with col_g1:
+
+col_g1, col_g2 = st.columns([2, 1])
+
+with col_g1:
     fig_mc = go.Figure()
-    for i in range(100): # Mostrar 100 trayectorias
-         fig_mc.add_trace(go.Scatter(y=resultados[:, i], mode='lines', opacity=0.3, showlegend=False))
+    for i in range(100):
+        fig_mc.add_trace(go.Scatter(y=resultados[:, i], mode='lines', opacity=0.3, showlegend=False))
     st.plotly_chart(fig_mc, use_container_width=True)
 
- with col_g2:
-     precios_finales = resultados[-1, :]
-     fig_hist = px.histogram(precios_finales, nbins=10, title="Distribución de Valor Final")
-     st.plotly_chart(fig_hist, use_container_width=True)
+with col_g2:
+    precios_finales = resultados[-1, :]
+    fig_hist = px.histogram(precios_finales, nbins=10, title="Distribución de Valor Final")
+    st.plotly_chart(fig_hist, use_container_width=True)
 
 # ==========================================
 # 5. DASHBOARD DE INTERPRETACIÓN
@@ -218,25 +222,25 @@ st.divider()
 st.header("Informe del inversor")
 
 peor_escenario = np.percentile(precios_finales, 5) - monto_inicial
-    mejor_escenario = np.percentile(precios_finales, 95) - monto_inicial
-    prob_perdida = (np.sum(precios_finales < monto_inicial) / simulaciones) * 100
+mejor_escenario = np.percentile(precios_finales, 95) - monto_inicial
+prob_perdida = (np.sum(precios_finales < monto_inicial) / simulaciones) * 100
 
-    col_res1, col_res2 = st.columns(2)
+col_res1, col_res2 = st.columns(2)
     
-    with col_res1:
-        st.subheader("🚦 Semáforo de Riesgo")
-        if prob_perdida > 40:
-            st.error(f"RIESGO CRÍTICO: Hay un {prob_perdida:.1f}% de probabilidad de terminar en pérdida bajo este escenario.")
-        elif prob_perdida > 20:
-            st.warning(f"RIESGO MEDIO: Probabilidad de pérdida del {prob_perdida:.1f}%.")
-        else:
-            st.success(f"RIESGO BAJO: Portafolio resiliente con solo {prob_perdida:.1f}% de prob. de pérdida.")
+with col_res1:
+    st.subheader("🚦 Semáforo de Riesgo")
+    if prob_perdida > 40:
+        st.error(f"RIESGO CRÍTICO: Hay un {prob_perdida:.1f}% de probabilidad de terminar en pérdida bajo este escenario.")
+    elif prob_perdida > 20:
+        st.warning(f"RIESGO MEDIO: Probabilidad de pérdida del {prob_perdida:.1f}%.")
+    else:
+        st.success(f"RIESGO BAJO: Portafolio resiliente con solo {prob_perdida:.1f}% de prob. de pérdida.")
 
-    with col_res2:
-        st.subheader("🔍 Traductor de Métricas")
-        st.write(f"**Incertidumbre:** Tu volatilidad ajustada es de **{vol_sim:.2%}**. Esto significa que el valor de tu dinero podría oscilar violentamente en un año.")
-        st.write(f"**Pronóstico:** En el peor 5% de los casos, podrías perder **${abs(peor_escenario):,.2f}**.")
-        st.write(f"**Eficiencia:** Tu Ratio de Sharpe indica qué tan bien se te paga por el susto que pasas al invertir.")
+with col_res2:
+    st.subheader("🔍 Traductor de Métricas")
+    st.write(f"**Incertidumbre:** Tu volatilidad ajustada es de **{vol_sim:.2%}**. Esto significa que el valor de tu dinero podría oscilar violentamente en un año.")
+    st.write(f"**Pronóstico:** En el peor 5% de los casos, podrías perder **${abs(peor_escenario):,.2f}**.")
+    st.write(f"**Eficiencia:** Tu Ratio de Sharpe indica qué tan bien se te paga por el susto que pasas al invertir.")
 
 else:
     st.warning("Por favor, ingresa tickers válidos para comenzar el análisis.")
@@ -286,10 +290,10 @@ def generar_pdf(nombre, perfil, score, monto, p_ret, p_vol, evento, prob_p, peor
 
 # --- BOTÓN DE DESCARGA EN LA INTERFAZ ---
 st.divider()
-st.subheader("📥 Exportar Resultados")
+st.subheader("Exportar Resultados")
 
 pdf_bytes = generar_pdf(
-    nombre, perfil, score_conocimiento, monto_inicial, 
+    nombre, perfil, score, monto_inicial, 
     p_ret_hist, p_vol_hist, nombre_evento, prob_perdida, peor_escenario
 )
 
