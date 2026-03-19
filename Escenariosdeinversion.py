@@ -155,10 +155,10 @@ st.header("SIMULADOR DE CRISIS GLOBAL")
 st.write("Selecciona un evento para ver la resiliencia de tu portafolio:")
 
 c_s1, c_s2, c_s3, c_s4 = st.columns(4)
-    shock_mu = 0
-    shock_sigma = 1
-    shock_corr = 0
-    nombre_evento = "Normal"
+shock_mu = 0
+shock_sigma = 1
+shock_corr = 0
+nombre_evento = "Normal"
 
     with c_s1:
         if st.button("Guerra Mundial"):
