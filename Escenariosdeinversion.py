@@ -187,29 +187,29 @@ mu_sim = p_ret_hist + shock_mu
 # Simplificación: incrementamos la volatilidad y forzamos correlación positiva en crisis
 vol_sim = p_vol_hist * shock_sigma + (shock_corr * 0.1)
 
-    simulaciones = 1000
-    dias = 252
-    resultados = np.zeros((dias, simulaciones))
+simulaciones = 1000
+dias = 252
+resultados = np.zeros((dias, simulaciones))
 
-    for i in range(simulaciones):
-        rets_sim = np.random.normal(mu_sim/dias, vol_sim/np.sqrt(dias), dias)
-        resultados[:, i] = monto_inicial * (1 + rets_sim).cumprod()
+for i in range(simulaciones):
+     rets_sim = np.random.normal(mu_sim/dias, vol_sim/np.sqrt(dias), dias)
+    resultados[:, i] = monto_inicial * (1 + rets_sim).cumprod()
 
-    # Gráficos de resultados
-    st.subheader(f"📊 Proyección a 1 año: Escenario {nombre_evento}")
+ # Gráficos de resultados
+st.subheader(f"📊 Proyección a 1 año: Escenario {nombre_evento}")
     
-    col_g1, col_g2 = st.columns([2, 1])
+ col_g1, col_g2 = st.columns([2, 1])
     
-    with col_g1:
-        fig_mc = go.Figure()
-        for i in range(100): # Mostrar 100 trayectorias
-            fig_mc.add_trace(go.Scatter(y=resultados[:, i], mode='lines', opacity=0.3, showlegend=False))
-        st.plotly_chart(fig_mc, use_container_width=True)
+ with col_g1:
+    fig_mc = go.Figure()
+    for i in range(100): # Mostrar 100 trayectorias
+         fig_mc.add_trace(go.Scatter(y=resultados[:, i], mode='lines', opacity=0.3, showlegend=False))
+    st.plotly_chart(fig_mc, use_container_width=True)
 
-    with col_g2:
-        precios_finales = resultados[-1, :]
-        fig_hist = px.histogram(precios_finales, nbins=10, title="Distribución de Valor Final")
-        st.plotly_chart(fig_hist, use_container_width=True)
+ with col_g2:
+     precios_finales = resultados[-1, :]
+     fig_hist = px.histogram(precios_finales, nbins=10, title="Distribución de Valor Final")
+     st.plotly_chart(fig_hist, use_container_width=True)
 
 # ==========================================
 # 5. DASHBOARD DE INTERPRETACIÓN
