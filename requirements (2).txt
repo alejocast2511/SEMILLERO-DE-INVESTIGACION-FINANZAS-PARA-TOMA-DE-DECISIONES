@@ -1,7 +1,0 @@
-﻿streamlit
-yfinance
-Pandas
-numpy
-matplotlib
-plotly
-qrcode
