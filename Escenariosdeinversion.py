@@ -160,23 +160,23 @@ shock_sigma = 1
 shock_corr = 0
 nombre_evento = "Normal"
 
-    with c_s1:
-        if st.button("Guerra Mundial"):
+with c_s1:
+    if st.button("Guerra Mundial"):
             shock_mu, shock_sigma, shock_corr, nombre_evento = -0.15, 1.8, 0.4, "Guerra Mundial"
             st.warning("Efecto: Caída en retornos y alta correlación.")
-    with c_s2:
-        if st.button("Pandemia"):
+with c_s2:
+    if st.button("Pandemia"):
             shock_mu, shock_sigma, shock_corr, nombre_evento = -0.10, 2.2, 0.2, "Pandemia"
             st.warning("Efecto: Volatilidad extrema.")
-    with c_s3:
-        if st.button("🏗️ Aranceles"):
+ with c_s3:
+    if st.button("🏗️ Aranceles"):
             shock_mu, shock_sigma, nombre_evento = -0.06, 1.3, "Choque Arancelario"
             st.warning("Efecto: Reducción de retornos en exportación.")
-    with c_s4:
-        if st.button("🔄 Reset"):
+with c_s4:
+    if st.button("🔄 Reset"):
             shock_mu, shock_sigma, shock_corr, nombre_evento = 0, 1, 0, "Normal"
 
-    st.write(f"Escenario Activo: **{nombre_evento}**")
+st.write(f"Escenario Activo: **{nombre_evento}**")
    
 # ==========================================
 # 4. SIMULACIÓN MONTE CARLO (1 AÑO)
