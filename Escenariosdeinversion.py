@@ -13,7 +13,6 @@ Proyecto: Análisis de portafolios de inversión por Simulación Monte Carlo
 """
 # %%writefile app.py
 
-# ==== 1 Importar librerías ====
 import streamlit as st
 import yfinance as yf
 import pandas as pd
@@ -34,7 +33,18 @@ from scipy.optimize import minimize
 from datetime import datetime
 
 # Configuración de página
-st.set_page_config(page_title="ESCENARIOS DE INVERSIÓN: DESCUBRE TU PERFIL INVERSOR. ", layout="wide")
+st.set_page_config(page_title="DACS-Quant: Gestión de Portafolios", layout="wide")
+
+@st.cache_data(ttl=3600)
+def get_data(tickers):
+    if not tickers: return pd.DataFrame()
+    try:
+        # Descarga silenciosa para no ensuciar la consola/interfaz
+        data = yf.download(tickers, start="2019-01-01", progress=False)['Close']
+        return data
+    except Exception as e:
+        st.error(f"Error al descargar datos: {e}")
+        return pd.DataFrame()
 
 # ==========================================
 # 1. CUESTIONARIO Y FILTRO DE CONOCIMIENTO
@@ -42,7 +52,7 @@ st.set_page_config(page_title="ESCENARIOS DE INVERSIÓN: DESCUBRE TU PERFIL INVE
 st.title("Determina tu perfil inversor.")
 with st.sidebar:
     st.header("Perfil del Inversor")
-    nombre = st.text_input("Nombre completo")
+    nombre = st.text_input("Nombre completo","Inversionista")
     edad = st.number_input("Edad", 18, 100, 25)
     monto = st.number_input("Cantidad a invertir (USD)", 1000, 1000000, 10000)
     tiempo = st.slider("Tiempo de inversión (Años)", 1, 10, 5)
@@ -53,8 +63,7 @@ with st.sidebar:
     p3 = st.radio("Diversificación: ¿Una sola acción es más segura que un ETF?", ["Sí", "No"])
     p4 = st.radio("Estadística: Retorno 10% y Volatilidad 25%, ¿puedo perder dinero?", ["Sí", "No"])
 
-    # Lógica de Puntaje
-    score = 0
+        score = 0
     if p1 == "Menos": score += 1
     if p2 == "Estafa/Error": score += 1
     if p3 == "No": score += 1
@@ -63,13 +72,13 @@ with st.sidebar:
     # Determinación de Perfil
     if score <= 1:
         perfil = "Conservador"
-        tickers_sugeridos = ["BND", "TIP", "GLD", "VIG","VTI"] # Bonos, Oro, Dividendos
+        tickers_sugeridos = ["BND", "TIP", "GLD", "VIG","VTI"] 
     elif score <= 3:
         perfil = "Balanceado"
-        tickers_sugeridos = ["SPY", "VEU", "BND", "VNQ","IEMG"] # S&P500, Global, Inmuebles
+        tickers_sugeridos = ["SPY", "VEU", "BND", "VNQ","IEMG"] 
     else:
         perfil = "Arriesgado"
-        tickers_sugeridos = ["QQQ", "VWO", "BTC-USD", "SMH","NVDA","ETH-USD"] # Tech, Emergentes, Crypto
+        tickers_sugeridos = ["QQQ", "VWO", "BTC-USD", "SMH","NVDA","ETH-USD"] 
 
     st.success(f"Perfil Determinado: **{perfil}**")
     st.info(f"Nivel de conocimiento Financiero-estadistico: {score}/4")
@@ -77,8 +86,8 @@ with st.sidebar:
 # ==========================================
 # 2. SELECCIÓN DE ACTIVOS Y DATOS
 # ==========================================
-st.header(f" Análisis del Portafolio Sugerido: {perfil}")
-tickers_input = st.text_input("Activos (separaDOS por coma):", ",".join(tickers_sugeridos))
+st.header(f"Portafolio Sugerido: {perfil}")
+tickers_input = st.text_input("Activos (separados por coma):", ",".join(tickers_sugeridos))
 tickers = [t.strip() for t in tickers_input.split(",")]
 
 @st.cache_data
@@ -96,9 +105,11 @@ if not data.empty:
     cov_matrix = returns.cov() * 252
     
     # Visualización de Crecimiento Relativo
-    st.subheader("📈 PRECIOS HISTORICOS (Base 100)")
+    st.subheader("📈 Comportamiento Historico Relativo")
     data_norm = (data / data.iloc[0]) * 100
     st.line_chart(data_norm)
+
+
 
     # --- BOTÓN DE OPTIMIZACIÓN AUTOMÁTICA ---
     st.divider()
@@ -116,7 +127,6 @@ if not data.empty:
             constraints = ({'type': 'eq', 'fun': lambda x: np.sum(x) - 1})
             bounds = tuple((0, 1) for _ in range(n))
             init_guess = n * [1./n]
-            
             optimized = minimize(p_vol, init_guess, method='SLSQP', bounds=bounds, constraints=constraints)
             st.session_state['pesos'] = optimized.x
             st.success("¡Optimización completada!")
@@ -151,7 +161,7 @@ with col2:
 # 3. ESCENARIOS DE ESTRÉS
 # ==========================================
 st.divider()
-st.header("SIMULADOR DE CRISIS GLOBAL")
+st.header("SIMULADOR DE CRISIS y RESILIENCIA")
 st.write("Selecciona un evento para ver la resiliencia de tu portafolio:")
 
 c_s1, c_s2, c_s3, c_s4 = st.columns(4)
@@ -181,6 +191,16 @@ st.write(f"Escenario Activo: **{nombre_evento}**")
 # ==========================================
 # 4. SIMULACIÓN MONTE CARLO (1 AÑO)
 # ==========================================
+def monte_carlo_vectorizado(monto_inicial, mu_sim, vol_sim, simulaciones=10000, dias=252):
+    # Generación de matriz de retornos aleatorios de una sola vez
+    rets_sim = np.random.normal(
+        (mu_sim / dias), 
+        (vol_sim / np.sqrt(dias)), 
+        (dias, simulaciones)
+    )
+    # Producto acumulado por columnas (axis=0)
+    precios_simulados = monto_inicial * (1 + rets_sim).cumprod(axis=0)
+    return precios_simulados
 
 # Ajuste de parámetros por Stress Test
 p_ret_hist = np.dot(pesos, mu)
@@ -192,7 +212,10 @@ score_conocimiento = score
 mu_sim = p_ret_hist + shock_mu
 vol_sim = p_vol_hist * shock_sigma + (shock_corr * 0.1)
 
-simulaciones = 1000
+with st.spinner('Procesando 10,000 escenarios estocásticos...'):
+        resultados = monte_carlo_vectorizado(monto, mu_sim, p_vol_sim)
+
+simulaciones = 10000
 dias = 252
 resultados = np.zeros((dias, simulaciones))
 
@@ -206,7 +229,7 @@ col_g1, col_g2 = st.columns([2, 1])
 
 with col_g1:
     fig_mc = go.Figure()
-    for i in range(100):
+    for i in range(50):
         fig_mc.add_trace(go.Scatter(y=resultados[:, i], mode='lines', opacity=0.3, showlegend=False))
     st.plotly_chart(fig_mc, use_container_width=True)
 
@@ -218,14 +241,14 @@ with col_g2:
 # ==========================================
 # 5. DASHBOARD DE INTERPRETACIÓN
 # ==========================================
-st.divider()
-st.header("Informe del inversor")
+prob_p = (np.sum(precios_finales < monto) / 5000) * 100
+    var_95 = np.percentile(precios_finales, 5) - monto
 
-peor_escenario = np.percentile(precios_finales, 5) - monto_inicial
-mejor_escenario = np.percentile(precios_finales, 95) - monto_inicial
-prob_perdida = (np.sum(precios_finales < monto_inicial) / simulaciones) * 100
-
-col_res1, col_res2 = st.columns(2)
+    st.subheader("Informe de Resiliencia")
+    if prob_p > 30:
+        st.error(f"⚠️ Probabilidad de pérdida: {prob_p:.1f}% | Riesgo de caída (VaR 95%): ${abs(var_95):,.2f}")
+    else:
+        st.success(f"✅ Probabilidad de pérdida: {prob_p:.1f}% | Portafolio Robusto.")
     
 with col_res1:
     st.subheader("🚦 Semáforo de Riesgo")
