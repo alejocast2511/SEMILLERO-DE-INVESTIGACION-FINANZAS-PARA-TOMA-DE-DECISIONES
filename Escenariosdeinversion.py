@@ -63,7 +63,7 @@ with st.sidebar:
     p3 = st.radio("Diversificación: ¿Una sola acción es más segura que un ETF?", ["Sí", "No"])
     p4 = st.radio("Estadística: Retorno 10% y Volatilidad 25%, ¿puedo perder dinero?", ["Sí", "No"])
 
-        score = 0
+    score = 0
     if p1 == "Menos": score += 1
     if p2 == "Estafa/Error": score += 1
     if p3 == "No": score += 1
