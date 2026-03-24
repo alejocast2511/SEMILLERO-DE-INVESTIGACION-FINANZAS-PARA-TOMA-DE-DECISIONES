@@ -242,13 +242,13 @@ with col_g2:
 # 5. DASHBOARD DE INTERPRETACIÓN
 # ==========================================
 prob_p = (np.sum(precios_finales < monto) / 5000) * 100
-    var_95 = np.percentile(precios_finales, 5) - monto
+var_95 = np.percentile(precios_finales, 5) - monto
 
-    st.subheader("Informe de Resiliencia")
-    if prob_p > 30:
-        st.error(f"⚠️ Probabilidad de pérdida: {prob_p:.1f}% | Riesgo de caída (VaR 95%): ${abs(var_95):,.2f}")
-    else:
-        st.success(f"✅ Probabilidad de pérdida: {prob_p:.1f}% | Portafolio Robusto.")
+st.subheader("Informe de Resiliencia")
+if prob_p > 30:
+    st.error(f"⚠️ Probabilidad de pérdida: {prob_p:.1f}% | Riesgo de caída (VaR 95%): ${abs(var_95):,.2f}")
+else:
+     st.success(f"✅ Probabilidad de pérdida: {prob_p:.1f}% | Portafolio Robusto.")
     
 with col_res1:
     st.subheader("🚦 Semáforo de Riesgo")
