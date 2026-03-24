@@ -163,28 +163,27 @@ with col2:
 st.divider()
 st.header("SIMULADOR DE CRISIS y RESILIENCIA")
 st.write("Selecciona un evento para ver la resiliencia de tu portafolio:")
-
 c_s1, c_s2, c_s3, c_s4 = st.columns(4)
-shock_mu = 0
-shock_sigma = 1
-shock_corr = 0
+
+shock_mu = 0.0
+shock_sigma = 1.0
 nombre_evento = "Normal"
 
 with c_s1:
     if st.button("Guerra Mundial"):
-            shock_mu, shock_sigma, shock_corr, nombre_evento = -0.15, 1.8, 0.4, "Guerra Mundial"
+            shock_mu, shock_sigma, nombre_evento = -0.20, 1.8, "Guerra Mundial"
             st.warning("Efecto: Caída en retornos y alta correlación.")
 with c_s2:
     if st.button("Pandemia"):
-            shock_mu, shock_sigma, shock_corr, nombre_evento = -0.10, 2.2, 0.2, "Pandemia"
+            shock_mu, shock_sigma, nombre_evento = -0.12, 3.0, "Pandemia"
             st.warning("Efecto: Volatilidad extrema.")
 with c_s3:
     if st.button("🏗️ Aranceles"):
-            shock_mu, shock_sigma, nombre_evento = -0.06, 1.3, "Choque Arancelario"
+            shock_mu, shock_sigma, nombre_evento = -0.05, 1.5, "Choque Arancelario"
             st.warning("Efecto: Reducción de retornos en exportación.")
 with c_s4:
     if st.button("🔄 Reset"):
-            shock_mu, shock_sigma, shock_corr, nombre_evento = 0, 1, 0, "Normal"
+            shock_mu, shock_sigma, shock_corr, nombre_evento = 0.0, 1.0, "Normal"
 
 st.write(f"Escenario Activo: **{nombre_evento}**")
    
@@ -204,7 +203,7 @@ def monte_carlo_vectorizado(monto_inicial, mu_sim, vol_sim, simulaciones=10000, 
 
 # Ajuste de parámetros por Stress Test
 p_ret_hist = np.dot(pesos, mu)
-p_vol_hist = np.sqrt(np.dot(pesos.T, np.dot(cov_matrix, pesos)))
+p_vol_hist = np.sqrt(np.dot(pesos.T, np.dot(cov_matrix * shock_sigma, pesos)))
 
 monto_inicial = monto
 score_conocimiento = score
