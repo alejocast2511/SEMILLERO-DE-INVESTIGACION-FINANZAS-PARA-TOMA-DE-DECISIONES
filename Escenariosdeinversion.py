@@ -91,15 +91,16 @@ if not st.session_state.generado:
     st.title("📊 Simulador de Portafolios")
     st.info("Completa el formulario en la barra lateral y presiona 'Generar Portafolio'")
     st.stop()
-    
-if st.button("🔄 Reiniciar", key="btn_reset"):
-    st.session_state.generado = False
-    
+   
+   
 if st.button("🚀 Generar Portafolio", key="btn_generar"):
     if nombre == "" or monto <= 0:
         st.error("Por favor completa correctamente los datos.")
     else:
         st.session_state.generado = True
+        
+if st.button("🔄 Reiniciar", key="btn_reset"):
+    st.session_state.generado = False
 
 # ==========================================
 # 2. SELECCIÓN DE ACTIVOS Y DATOS
