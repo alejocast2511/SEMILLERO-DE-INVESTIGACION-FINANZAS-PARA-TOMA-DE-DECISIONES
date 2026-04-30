@@ -163,29 +163,47 @@ st.header("SIMULADOR DE CRISIS y RESILIENCIA")
 st.write("Selecciona un evento para ver la resiliencia de tu portafolio:")
 c_s1, c_s2, c_s3, c_s4 = st.columns(4)
 
-shock_mu = 0.0
-shock_sigma = 1.0
-shock_corr = 0.0
-nombre_evento = "Normal"
+if "shock_mu" not in st.session_state:
+    st.session_state.shock_mu = 0.0
+    st.session_state.shock_sigma = 1.0
+    st.session_state.shock_corr = 0.0
+    st.session_state.nombre_evento = "Normal"
 
 with c_s1:
     if st.button("Guerra Mundial"):
-            shock_mu, shock_sigma, nombre_evento = -0.20, 1.8, "Guerra Mundial"
-            st.warning("Efecto: Caída en retornos y alta correlación.")
+        st.session_state.shock_mu = -0.20
+        st.session_state.shock_sigma = 1.8
+        st.session_state.shock_corr = 0.4
+        st.session_state.nombre_evento = "Guerra Mundial"
+
 with c_s2:
     if st.button("Pandemia"):
-            shock_mu, shock_sigma, nombre_evento = -0.12, 3.0, "Pandemia"
-            st.warning("Efecto: Volatilidad extrema.")
+        st.session_state.shock_mu = -0.12
+        st.session_state.shock_sigma = 3.0
+        st.session_state.shock_corr = 0.5
+        st.session_state.nombre_evento = "Pandemia"
+
 with c_s3:
     if st.button("🏗️ Aranceles"):
-            shock_mu, shock_sigma, nombre_evento = -0.05, 1.5, "Choque Arancelario"
-            st.warning("Efecto: Reducción de retornos en exportación.")
+        st.session_state.shock_mu = -0.05
+        st.session_state.shock_sigma = 1.5
+        st.session_state.shock_corr = 0.3
+        st.session_state.nombre_evento = "Choque Arancelario"
+
 with c_s4:
     if st.button("🔄 Reset"):
-            shock_mu, shock_sigma, shock_corr, nombre_evento = 0.0, 1.0, "Normal"
+        st.session_state.shock_mu = 0.0
+        st.session_state.shock_sigma = 1.0
+        st.session_state.shock_corr = 0.0
+        st.session_state.nombre_evento = "Normal"
+
+shock_mu = st.session_state.shock_mu
+shock_sigma = st.session_state.shock_sigma
+shock_corr = st.session_state.shock_corr
+nombre_evento = st.session_state.nombre_evento
 
 st.write(f"Escenario Activo: **{nombre_evento}**")
-   
+  
 # ==========================================
 # 4. SIMULACIÓN MONTE CARLO (1 AÑO)
 # ==========================================
