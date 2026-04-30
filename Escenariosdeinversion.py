@@ -87,9 +87,6 @@ with st.sidebar:
 if "generado" not in st.session_state:
     st.session_state.generado = False
 
-if st.button("🚀 Generar Portafolio"):
-    st.session_state.generado = True
-
 if not st.session_state.generado:
     st.title("📊 Simulador de Portafolios")
     st.info("Completa el formulario en la barra lateral y presiona 'Generar Portafolio'")
