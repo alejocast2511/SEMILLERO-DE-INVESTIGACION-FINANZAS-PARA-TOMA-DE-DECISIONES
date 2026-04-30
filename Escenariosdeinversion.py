@@ -90,13 +90,11 @@ st.header(f"Portafolio Sugerido: {perfil}")
 tickers_input = st.text_input("Activos (separados por coma):", ",".join(tickers_sugeridos))
 tickers = [t.strip() for t in tickers_input.split(",")]
 
-@st.cache_data
-def get_data(tickers):
-    data = yf.download(tickers, start="2019-01-01")['Close']
-    return data
-
 data = get_data(tickers)
 returns = data.pct_change().dropna()
+if data.empty or data.shape[1] == 0:
+    st.error("No se pudieron descargar datos válidos.")
+    st.stop()
 
 if not data.empty:
     returns = data.pct_change().dropna()
@@ -144,7 +142,7 @@ if not data.empty:
 # Estadísticas Anualizadas
 mu = returns.mean() * 252
 sigma = returns.std() * np.sqrt(252)
-sharpe = mu / sigma
+sharpe = mu / sigma.replace(0,np.nan)
 
 col1, col2 = st.columns(2)
 with col1:
@@ -167,6 +165,7 @@ c_s1, c_s2, c_s3, c_s4 = st.columns(4)
 
 shock_mu = 0.0
 shock_sigma = 1.0
+shock_corr = 0.0
 nombre_evento = "Normal"
 
 with c_s1:
@@ -202,8 +201,9 @@ def monte_carlo_vectorizado(monto_inicial, mu_sim, vol_sim, simulaciones=10000, 
     return precios_simulados
 
 # Ajuste de parámetros por Stress Test
+
 p_ret_hist = np.dot(pesos, mu)
-p_vol_hist = np.sqrt(np.dot(pesos.T, np.dot(cov_matrix * shock_sigma, pesos)))
+p_vol_hist = np.sqrt(np.dot(pesos.T, np.dot(cov_matrix, pesos)))
 
 monto_inicial = monto
 score_conocimiento = score
@@ -212,15 +212,7 @@ mu_sim = p_ret_hist + shock_mu
 vol_sim = p_vol_hist * shock_sigma + (shock_corr * 0.1)
 
 with st.spinner('Procesando 10,000 escenarios estocásticos...'):
-        resultados = monte_carlo_vectorizado(monto, mu_sim, p_vol_sim)
-
-simulaciones = 10000
-dias = 252
-resultados = np.zeros((dias, simulaciones))
-
-for i in range(simulaciones):
-    rets_sim = np.random.normal(mu_sim/dias, vol_sim/np.sqrt(dias), dias)
-    resultados[:, i] = monto_inicial * (1 + rets_sim).cumprod()
+        resultados = monte_carlo_vectorizado(monto, mu_sim, vol_sim)
 
 st.subheader(f"📊 Proyección a 1 año: Escenario {nombre_evento}")
 
@@ -240,10 +232,15 @@ with col_g2:
 # ==========================================
 # 5. DASHBOARD DE INTERPRETACIÓN
 # ==========================================
-prob_p = (np.sum(precios_finales < monto) / 5000) * 100
+prob_p = (np.sum(precios_finales < monto) / len(precios_finales)) * 100
 var_95 = np.percentile(precios_finales, 5) - monto
 
 st.subheader("Informe de Resiliencia")
+prob_perdida = prob_p
+peor_escenario = var_95
+
+col_res1, col_res2 = st.columns(2)
+
 if prob_p > 30:
     st.error(f"⚠️ Probabilidad de pérdida: {prob_p:.1f}% | Riesgo de caída (VaR 95%): ${abs(var_95):,.2f}")
 else:
