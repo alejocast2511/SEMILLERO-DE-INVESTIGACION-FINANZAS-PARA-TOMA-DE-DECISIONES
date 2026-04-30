@@ -78,7 +78,7 @@ with st.sidebar:
         tickers_sugeridos = ["SPY", "VEU", "BND", "VNQ","IEMG"] 
     else:
         perfil = "Arriesgado"
-        tickers_sugeridos = ["QQQ", "VWO", "BTC-USD", "SMH","NVDA","ETH-USD"] 
+        tickers_sugeridos = ["VWO", "BTC-USD", "SMH","NVDA","ETH-USD"] 
 
     st.success(f"Perfil Determinado: **{perfil}**")
     st.info(f"Nivel de conocimiento Financiero-estadistico: {score}/4")
