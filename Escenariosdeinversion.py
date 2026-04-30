@@ -83,6 +83,27 @@ with st.sidebar:
     st.success(f"Perfil Determinado: **{perfil}**")
     st.info(f"Nivel de conocimiento Financiero-estadistico: {score}/4")
 
+# Control de ejecución
+if "generado" not in st.session_state:
+    st.session_state.generado = False
+
+if st.button("🚀 Generar Portafolio"):
+    st.session_state.generado = True
+
+if not st.session_state.generado:
+    st.title("📊 Simulador de Portafolios")
+    st.info("Completa el formulario en la barra lateral y presiona 'Generar Portafolio'")
+    st.stop()
+    
+if st.button("🔄 Reiniciar"):
+    st.session_state.generado = False
+    
+if st.button("🚀 Generar Portafolio"):
+    if nombre == "" or monto <= 0:
+        st.error("Por favor completa correctamente los datos.")
+    else:
+        st.session_state.generado = True
+
 # ==========================================
 # 2. SELECCIÓN DE ACTIVOS Y DATOS
 # ==========================================
