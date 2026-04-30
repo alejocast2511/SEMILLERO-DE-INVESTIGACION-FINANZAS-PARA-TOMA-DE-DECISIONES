@@ -95,10 +95,10 @@ if not st.session_state.generado:
     st.info("Completa el formulario en la barra lateral y presiona 'Generar Portafolio'")
     st.stop()
     
-if st.button("🔄 Reiniciar"):
+if st.button("🔄 Reiniciar", key="btn_reset"):
     st.session_state.generado = False
     
-if st.button("🚀 Generar Portafolio"):
+if st.button("🚀 Generar Portafolio", key="btn_generar"):
     if nombre == "" or monto <= 0:
         st.error("Por favor completa correctamente los datos.")
     else:
