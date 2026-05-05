@@ -39,7 +39,6 @@ st.set_page_config(page_title="DACS-Quant: Gestión de Portafolios", layout="wid
 def get_data(tickers):
     if not tickers: return pd.DataFrame()
     try:
-        # Descarga silenciosa para no ensuciar la consola/interfaz
         data = yf.download(tickers, start="2019-01-01", progress=False)['Close']
         return data
     except Exception as e:
@@ -63,6 +62,12 @@ with st.sidebar:
     p3 = st.radio("Diversificación: ¿Una sola acción es más segura que un ETF?", ["Sí", "No"])
     p4 = st.radio("Estadística: Retorno 10% y Volatilidad 25%, ¿puedo perder dinero?", ["Sí", "No"])
 
+if st.button("🚀 Generar Portafolio", key="btn_generar"):
+    if nombre == "" or monto <= 0:
+        st.error("Por favor completa correctamente los datos.")
+    else:
+        st.session_state.generado = True
+    
     score = 0
     if p1 == "Menos": score += 1
     if p2 == "Estafa/Error": score += 1
@@ -91,13 +96,6 @@ if not st.session_state.generado:
     st.title("📊 Simulador de Portafolios")
     st.info("Completa el formulario en la barra lateral y presiona 'Generar Portafolio'")
     st.stop()
-   
-   
-if st.button("🚀 Generar Portafolio", key="btn_generar"):
-    if nombre == "" or monto <= 0:
-        st.error("Por favor completa correctamente los datos.")
-    else:
-        st.session_state.generado = True
         
 if st.button("🔄 Reiniciar", key="btn_reset"):
     st.session_state.generado = False
