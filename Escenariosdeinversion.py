@@ -76,17 +76,21 @@ if st.button("🚀 Generar Portafolio", key="btn_generar"):
 
     # Determinación de Perfil
     if score <= 1:
-        perfil = "Conservador"
+        st.session_state.perfil = "Conservador"
         tickers_sugeridos = ["BND", "TIP", "GLD", "VIG","VTI"] 
     elif score <= 3:
-        perfil = "Balanceado"
+        st.session_state.perfil = "Balanceado"
         tickers_sugeridos = ["SPY", "VEU", "BND", "VNQ","IEMG"] 
     else:
-        perfil = "Arriesgado"
+        st.session_state.perfil = "Arriesgado"
         tickers_sugeridos = ["VWO", "BTC-USD", "SMH","NVDA","ETH-USD"] 
 
     st.success(f"Perfil Determinado: **{perfil}**")
     st.info(f"Nivel de conocimiento Financiero-estadistico: {score}/4")
+
+# Protección de variables en session_state
+if "perfil" not in st.session_state:
+    st.session_state.perfil = None
 
 # Control de ejecución
 if "generado" not in st.session_state:
@@ -96,6 +100,7 @@ if not st.session_state.generado:
     st.title("📊 Simulador de Portafolios")
     st.info("Completa el formulario en la barra lateral y presiona 'Generar Portafolio'")
     st.stop()
+    perfil = st.session_state.perfil
         
 if st.button("🔄 Reiniciar", key="btn_reset"):
     st.session_state.generado = False
