@@ -85,7 +85,7 @@ if st.button("🚀 Generar Portafolio", key="btn_generar"):
         st.session_state.perfil = "Arriesgado"
         tickers_sugeridos = ["VWO", "BTC-USD", "SMH","NVDA","ETH-USD"] 
 
-    st.success(f"Perfil Determinado: **{perfil}**")
+    st.success(f"Perfil Determinado: **{st.session_state.perfil}**")
     st.info(f"Nivel de conocimiento Financiero-estadistico: {score}/4")
 
 # Protección de variables en session_state
