@@ -7,9 +7,9 @@ Original file is located at
     https://colab.research.google.com/drive/1Fyw3Erpo7HxnjrCPyLRDEGEEilyl9GYW
 """
 
-"""
+
 # %%writefile app.py
-"""
+
 
 import streamlit as st
 import yfinance as yf
