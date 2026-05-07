@@ -8,9 +8,6 @@ Original file is located at
 """
 
 """
-Proyecto: Análisis de portafolios de inversión por Simulación Monte Carlo
-
-"""
 # %%writefile app.py
 
 import streamlit as st
