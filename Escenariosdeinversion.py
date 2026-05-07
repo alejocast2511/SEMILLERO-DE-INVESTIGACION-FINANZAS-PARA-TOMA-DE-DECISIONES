@@ -160,8 +160,8 @@ fig_hist.update_layout(title="Comportamiento Histórico Relativo", xaxis_title="
 st.plotly_chart(fig_hist, use_container_width=True)
 
     # --- BOTÓN DE OPTIMIZACIÓN AUTOMÁTICA ---
-    st.divider()
-    st.subheader("⚖️ Optimización de Pesos")
+st.divider()
+st.subheader("⚖️ Optimización de Pesos")
     
     col_opt, col_pesos = st.columns([1, 2])
     
