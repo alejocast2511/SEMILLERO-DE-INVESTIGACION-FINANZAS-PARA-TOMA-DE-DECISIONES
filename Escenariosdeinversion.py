@@ -132,23 +132,32 @@ tickers_input = st.text_input("Activos (separados por coma):", ",".join(st.sessi
 tickers = [t.strip() for t in tickers_input.split(",")]
 
 data = get_data(tickers)
-returns = data.pct_change().dropna()
-if data.empty or data.shape[1] == 0:
-    st.error("No se pudieron descargar datos válidos.")
+if data.empty:st.error("No se pudieron descargar datos válidos.")
+   st.stop()
+data = data.dropna(axis=1, how='all')
+data = data.ffill()
+data = data.dropna()
+if data.empty:
+    st.error("Los datos descargados contienen demasiados valores faltantes.")
     st.stop()
+returns = data.pct_change().dropna()
 
 if not data.empty:
     returns = data.pct_change().dropna()
     mu = returns.mean() * 252
     sigma = returns.std() * np.sqrt(252)
     cov_matrix = returns.cov() * 252
-    
+        
     # Visualización de Crecimiento Relativo
-    st.subheader("📈 Comportamiento Historico Relativo")
-    data_norm = (data / data.iloc[0]) * 100
-    st.line_chart(data_norm)
+st.subheader("📈 Comportamiento Histórico Relativo")
+data_norm = (data / data.iloc[0]) * 100
+fig_hist = go.Figure()
+for col in data_norm.columns:
+    fig_hist.add_trace(go.Scatter( x=data_norm.index, y=data_norm[col],mode='lines',name=col))
 
+fig_hist.update_layout(title="Comportamiento Histórico Relativo", xaxis_title="Fecha", yaxis_title="Base 100", template="plotly_dark", hovermode="x unified")
 
+st.plotly_chart(fig_hist, use_container_width=True)
 
     # --- BOTÓN DE OPTIMIZACIÓN AUTOMÁTICA ---
     st.divider()
