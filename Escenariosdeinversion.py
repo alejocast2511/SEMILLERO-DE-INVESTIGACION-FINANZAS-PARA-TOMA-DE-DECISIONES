@@ -58,7 +58,7 @@ st.session_state.edad = edad
 
 if "nombre" not in st.session_state:
     st.session_state.nombre = "Inversionista"
-nombre = st.number_input("Nombre completo", st.session_state.nombre)
+nombre = st.text_input("Nombre completo", value=st.session_state.nombre)
 st.session_state.nombre = nombre
 
 if "monto" not in st.session_state:
