@@ -51,21 +51,27 @@ def get_data(tickers):
 st.title("Determina tu perfil inversor.")
 with st.sidebar:
     st.header("Perfil del Inversor")
-    nombre = st.text_input("Nombre completo","Inversionista")
-    edad = st.number_input("Edad", 18, 100, 25)
-    monto = st.number_input("Cantidad a invertir (USD)", 1000, 1000000, 10000)
-    tiempo = st.slider("Tiempo de inversión (Años)", 1, 10, 5)
+if "edad" not in st.session_state:
+    st.session_state.edad = 25
+edad = st.number_input("Edad", 18, 100, st.session_state.edad)
+st.session_state.edad = edad    
 
-    st.session_state.nombre = nombre
-    st.session_state.monto = monto
-    st.session_state.monto = edad
-    st.session_state.monto = tiempo
+if "nombre" not in st.session_state:
+    st.session_state.nombre = "Inversionista"
+nombre = st.number_input("Nombre completo", st.session_state.nombre)
+st.session_state.nombre = nombre
 
-    nombre = st.session_state.nombre
-    monto = st.session_state.monto
-    edad = st.session_state.edad
-    tiempo = st.session_state.tiempo
+if "monto" not in st.session_state:
+    st.session_state.monto = 10000
+monto = st.number_input("cantidad a invertir (USD)",min_value=1000, max_value=1000000, value=st.session_state.monto)
+st.session_state.monto = monto
 
+if "tiempo" not in st.session_state:
+    st.session_state.tiempo = 3 
+tiempo = st.number_input("tiempo de inversion (años)",in_value=1, max_value=5, value=st.session_state.tiempo)
+st.session_state.tiempo = tiempo
+    
+    
     st.subheader("Filtro de Conocimiento")
     p1 = st.radio("Inflación: $100 al 2% con inflación del 3%, ¿compras más o menos?", ["Más", "Menos", "Igual"])
     p2 = st.radio("Riesgo-Retorno: Inversión garantizada 20% mensual sin riesgo es:", ["Muy probable", "Estafa/Error", "Normal"])
