@@ -108,7 +108,7 @@ if st.button("🔄 Reiniciar", key="btn_reset"):
 # ==========================================
 # 2. SELECCIÓN DE ACTIVOS Y DATOS
 # ==========================================
-st.header(f"Portafolio Sugerido: {perfil}")
+st.header(f"Portafolio Sugerido: {st.session_state.perfil}")
 tickers_input = st.text_input("Activos (separados por coma):", ",".join(tickers_sugeridos))
 tickers = [t.strip() for t in tickers_input.split(",")]
 
