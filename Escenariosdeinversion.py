@@ -68,7 +68,7 @@ st.session_state.monto = monto
 
 if "tiempo" not in st.session_state:
     st.session_state.tiempo = 3 
-tiempo = st.number_input("tiempo de inversion (años)",in_value=1, max_value=5, value=st.session_state.tiempo)
+tiempo = st.slider("tiempo de inversion (años)",min_value=1, max_value=5, value=st.session_state.tiempo)
 st.session_state.tiempo = tiempo
   
   
