@@ -56,6 +56,16 @@ with st.sidebar:
     monto = st.number_input("Cantidad a invertir (USD)", 1000, 1000000, 10000)
     tiempo = st.slider("Tiempo de inversión (Años)", 1, 10, 5)
 
+    st.session_state.nombre = nombre
+    st.session_state.monto = monto
+    st.session_state.monto = edad
+    st.session_state.monto = tiempo
+
+    nombre = st.session_state.nombre
+    monto = st.session_state.monto
+    edad = st.session_state.edad
+    tiempo = st.session_state.tiempo
+
     st.subheader("Filtro de Conocimiento")
     p1 = st.radio("Inflación: $100 al 2% con inflación del 3%, ¿compras más o menos?", ["Más", "Menos", "Igual"])
     p2 = st.radio("Riesgo-Retorno: Inversión garantizada 20% mensual sin riesgo es:", ["Muy probable", "Estafa/Error", "Normal"])
@@ -73,6 +83,7 @@ if st.button("🚀 Generar Portafolio", key="btn_generar"):
     if p2 == "Estafa/Error": score += 1
     if p3 == "No": score += 1
     if p4 == "Sí": score += 1
+    st.session_state.score = score
 
     # Determinación de Perfil
     if score <= 1:
@@ -86,13 +97,16 @@ if st.button("🚀 Generar Portafolio", key="btn_generar"):
         st.session_state.tickers_sugeridos = ["VWO", "BTC-USD", "SMH","NVDA","ETH-USD"] 
 
     st.success(f"Perfil Determinado: **{st.session_state.perfil}**")
-    st.info(f"Nivel de conocimiento Financiero-estadistico: {score}/4")
+    st.info(f"Nivel de conocimiento Financiero-estadistico: {st.session_state.score}/4")
 
 # Protección de variables en session_state
 if "perfil" not in st.session_state:
     st.session_state.perfil = None
 if "tickers_sugeridos" not in st.session_state:
     st.session_state.tickers_sugeridos = []
+if "score" not in st.session_state:
+    st.session_state.score = 0
+    
     
 # Control de ejecución
 if "generado" not in st.session_state:
@@ -248,7 +262,7 @@ p_ret_hist = np.dot(pesos, mu)
 p_vol_hist = np.sqrt(np.dot(pesos.T, np.dot(cov_matrix, pesos)))
 
 monto_inicial = monto
-score_conocimiento = score
+score_conocimiento = st.session_state.score
 
 mu_sim = p_ret_hist + shock_mu
 vol_sim = p_vol_hist * shock_sigma + (shock_corr * 0.1)
