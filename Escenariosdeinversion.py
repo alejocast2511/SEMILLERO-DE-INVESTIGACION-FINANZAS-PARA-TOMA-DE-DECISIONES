@@ -178,14 +178,14 @@ with col_opt:
         optimized = minimize(p_vol, init_guess, method='SLSQP', bounds=bounds, constraints=constraints)
         st.session_state['pesos'] = optimized.x
         st.success("¡Optimización completada!")
-     else:
-        if 'pesos' not in st.session_state:
-                st.session_state['pesos'] = np.array([1/len(tickers)] * len(tickers))
+else:
+    if 'pesos' not in st.session_state:
+        st.session_state['pesos'] = np.array([1/len(tickers)] * len(tickers))
 
-    pesos = st.session_state['pesos']
-    pesos_df = pd.DataFrame({'Activo': tickers, 'Peso %': pesos * 100})
+        pesos = st.session_state['pesos']
+        pesos_df = pd.DataFrame({'Activo': tickers, 'Peso %': pesos * 100})
     
-    with col_pesos:
+with col_pesos:
         fig_pie = px.pie(pesos_df, values='Peso %', names='Activo', title="Distribución del Capital")
         st.plotly_chart(fig_pie, use_container_width=True)
 
