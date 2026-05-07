@@ -73,10 +73,10 @@ st.session_state.tiempo = tiempo
   
   
 st.subheader("Filtro de Conocimiento")
-    p1 = st.radio("Inflación: $100 al 2% con inflación del 3%, ¿compras más o menos?", ["Más", "Menos", "Igual"])
-    p2 = st.radio("Riesgo-Retorno: Inversión garantizada 20% mensual sin riesgo es:", ["Muy probable", "Estafa/Error", "Normal"])
-    p3 = st.radio("Diversificación: ¿Una sola acción es más segura que un ETF?", ["Sí", "No"])
-    p4 = st.radio("Estadística: Retorno 10% y Volatilidad 25%, ¿puedo perder dinero?", ["Sí", "No"])
+p1 = st.radio("Inflación: $100 al 2% con inflación del 3%, ¿compras más o menos?", ["Más", "Menos", "Igual"])
+p2 = st.radio("Riesgo-Retorno: Inversión garantizada 20% mensual sin riesgo es:", ["Muy probable", "Estafa/Error", "Normal"])
+p3 = st.radio("Diversificación: ¿Una sola acción es más segura que un ETF?", ["Sí", "No"])
+p4 = st.radio("Estadística: Retorno 10% y Volatilidad 25%, ¿puedo perder dinero?", ["Sí", "No"])
 
 if st.button("🚀 Generar Portafolio", key="btn_generar"):
     if nombre == "" or monto <= 0:
