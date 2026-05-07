@@ -117,7 +117,7 @@ if "generado" not in st.session_state:
 
 if not st.session_state.generado:
     st.title("📊 Simulador de Portafolios")
-    st.info("Completa el formulario en la barra lateral y presiona 'Generar Portafolio'")
+    st.info("Completa el formulario y presiona 'Generar Portafolio'")
     st.stop()
     perfil = st.session_state.perfil
         
