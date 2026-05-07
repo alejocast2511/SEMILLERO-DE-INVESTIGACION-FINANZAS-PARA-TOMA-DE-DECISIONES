@@ -165,21 +165,21 @@ st.subheader("⚖️ Optimización de Pesos")
     
 col_opt, col_pesos = st.columns([1, 2])
     
-        with col_opt:
-           st.write("Calcula la distribución ideal para el menor riesgo posible.")
-        if st.button("Optimizar para Mínima Varianza"):
-             n = len(tickers)
-            def p_vol(weights):
-                return np.sqrt(np.dot(weights.T, np.dot(cov_matrix, weights)))
+    with col_opt:
+        st.write("Calcula la distribución ideal para el menor riesgo posible.")
+    if st.button("Optimizar para Mínima Varianza"):
+         n = len(tickers)
+        def p_vol(weights):
+            return np.sqrt(np.dot(weights.T, np.dot(cov_matrix, weights)))
             
-            constraints = ({'type': 'eq', 'fun': lambda x: np.sum(x) - 1})
-            bounds = tuple((0, 1) for _ in range(n))
-            init_guess = n * [1./n]
-            optimized = minimize(p_vol, init_guess, method='SLSQP', bounds=bounds, constraints=constraints)
-            st.session_state['pesos'] = optimized.x
-            st.success("¡Optimización completada!")
-        else:
-            if 'pesos' not in st.session_state:
+        constraints = ({'type': 'eq', 'fun': lambda x: np.sum(x) - 1})
+        bounds = tuple((0, 1) for _ in range(n))
+        init_guess = n * [1./n]
+        optimized = minimize(p_vol, init_guess, method='SLSQP', bounds=bounds, constraints=constraints)
+        st.session_state['pesos'] = optimized.x
+        st.success("¡Optimización completada!")
+     else:
+        if 'pesos' not in st.session_state:
                 st.session_state['pesos'] = np.array([1/len(tickers)] * len(tickers))
 
     pesos = st.session_state['pesos']
