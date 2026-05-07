@@ -77,13 +77,13 @@ if st.button("🚀 Generar Portafolio", key="btn_generar"):
     # Determinación de Perfil
     if score <= 1:
         st.session_state.perfil = "Conservador"
-        tickers_sugeridos = ["BND", "TIP", "GLD", "VIG","VTI"] 
+        st.session_state.tickers_sugeridos = ["BND", "TIP", "GLD", "VIG","VTI"] 
     elif score <= 3:
         st.session_state.perfil = "Balanceado"
-        tickers_sugeridos = ["SPY", "VEU", "BND", "VNQ","IEMG"] 
+        st.session_state.tickers_sugeridos = ["SPY", "VEU", "BND", "VNQ","IEMG"] 
     else:
         st.session_state.perfil = "Arriesgado"
-        tickers_sugeridos = ["VWO", "BTC-USD", "SMH","NVDA","ETH-USD"] 
+        st.session_state.tickers_sugeridos = ["VWO", "BTC-USD", "SMH","NVDA","ETH-USD"] 
 
     st.success(f"Perfil Determinado: **{st.session_state.perfil}**")
     st.info(f"Nivel de conocimiento Financiero-estadistico: {score}/4")
@@ -91,7 +91,9 @@ if st.button("🚀 Generar Portafolio", key="btn_generar"):
 # Protección de variables en session_state
 if "perfil" not in st.session_state:
     st.session_state.perfil = None
-
+if "tickers_sugeridos" not in st.session_state:
+    st.session_state.tickers_sugeridos = []
+    
 # Control de ejecución
 if "generado" not in st.session_state:
     st.session_state.generado = False
@@ -109,7 +111,7 @@ if st.button("🔄 Reiniciar", key="btn_reset"):
 # 2. SELECCIÓN DE ACTIVOS Y DATOS
 # ==========================================
 st.header(f"Portafolio Sugerido: {st.session_state.perfil}")
-tickers_input = st.text_input("Activos (separados por coma):", ",".join(tickers_sugeridos))
+tickers_input = st.text_input("Activos (separados por coma):", ",".join(st.session_state.tickers_sugeridos))
 tickers = [t.strip() for t in tickers_input.split(",")]
 
 data = get_data(tickers)
