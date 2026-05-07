@@ -109,7 +109,7 @@ if "tickers_sugeridos" not in st.session_state:
     st.session_state.tickers_sugeridos = []
 if "score" not in st.session_state:
     st.session_state.score = 0
-    
+  
     
 # Control de ejecución
 if "generado" not in st.session_state:
@@ -133,7 +133,7 @@ tickers = [t.strip() for t in tickers_input.split(",")]
 
 data = get_data(tickers)
 if data.empty:st.error("No se pudieron descargar datos válidos.")
-   st.stop()
+st.stop()
 data = data.dropna(axis=1, how='all')
 data = data.ffill()
 data = data.dropna()
