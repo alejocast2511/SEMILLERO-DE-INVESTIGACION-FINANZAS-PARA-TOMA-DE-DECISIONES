@@ -165,10 +165,10 @@ st.subheader("⚖️ Optimización de Pesos")
     
 col_opt, col_pesos = st.columns([1, 2])
     
-    with col_opt:
-        st.write("Calcula la distribución ideal para el menor riesgo posible.")
+with col_opt:
+    st.write("Calcula la distribución ideal para el menor riesgo posible.")
     if st.button("Optimizar para Mínima Varianza"):
-         n = len(tickers)
+        n = len(tickers)
         def p_vol(weights):
             return np.sqrt(np.dot(weights.T, np.dot(cov_matrix, weights)))
             
