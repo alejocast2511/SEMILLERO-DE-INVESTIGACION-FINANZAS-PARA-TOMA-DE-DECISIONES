@@ -49,8 +49,7 @@ def get_data(tickers):
 # 1. CUESTIONARIO Y FILTRO DE CONOCIMIENTO
 # ==========================================
 st.title("Determina tu perfil inversor.")
-with st.sidebar:
-    st.header("Perfil del Inversor")
+
 if "edad" not in st.session_state:
     st.session_state.edad = 25
 edad = st.number_input("Edad", 18, 100, st.session_state.edad)
