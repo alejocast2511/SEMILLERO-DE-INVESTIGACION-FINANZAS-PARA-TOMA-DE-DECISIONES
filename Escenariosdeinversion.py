@@ -18,230 +18,287 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
-import matplotlib.pyplot as plt
-from scipy.stats import norm
-import sys
-import subprocess
-import threading
-import time
-import io
-import math
-from typing import List
+from fpdf import PFDF
 from scipy.optimize import minimize
-from datetime import datetime
+
 
 # Configuración de página
 st.set_page_config(page_title="DACS-Quant: Gestión de Portafolios", layout="wide")
 
+#
+defaults = {"nombre": "Inversionista", "edad": 25, "monto": 10000, "tiempo": 5, "perfil": None,  "score": 0, "tickers_sugeridos": [], 
+            "generado": False, "shock_mu": 0.0, "shock_sigma": 1.0, "shock_corr": 0.0, "nombre_evento": "Normal"}
+
+for key, value in defaults.items():
+    if key not in st.session_state:
+        st.session_state[key] = value
+
+# funciones
+
 @st.cache_data(ttl=3600)
 def get_data(tickers):
-    if not tickers: return pd.DataFrame()
+
     try:
-        data = yf.download(tickers, start="2019-01-01", progress=False)['Close']
+
+        data = yf.download(tickers, start="2019-01-01", progress=False, auto_adjust=True)["Close"]
         return data
     except Exception as e:
-        st.error(f"Error al descargar datos: {e}")
+
+        st.error(f"Error descargando datos: {e}")
         return pd.DataFrame()
 
-# ==========================================
-# 1. CUESTIONARIO Y FILTRO DE CONOCIMIENTO
-# ==========================================
-st.title("Determina tu perfil inversor.")
 
-if "edad" not in st.session_state:
-    st.session_state.edad = 25
-edad = st.number_input("Edad", 18, 100, st.session_state.edad)
-st.session_state.edad = edad    
+def monte_carlo_vectorizado(monto_inicial, mu_sim, vol_sim, simulaciones=10000, dias=252):
 
-if "nombre" not in st.session_state:
-    st.session_state.nombre = "Inversionista"
-nombre = st.text_input("Nombre completo", value=st.session_state.nombre)
-st.session_state.nombre = nombre
+    rets_sim = np.random.normal((mu_sim / dias), (vol_sim / np.sqrt(dias)), (dias, simulaciones)    )
 
-if "monto" not in st.session_state:
-    st.session_state.monto = 10000
-monto = st.number_input("cantidad a invertir (USD)",min_value=1000, max_value=1000000, value=st.session_state.monto)
-st.session_state.monto = monto
+    precios_simulados = (monto_inicial *(1 + rets_sim).cumprod(axis=0)    )
 
-if "tiempo" not in st.session_state:
-    st.session_state.tiempo = 3 
-tiempo = st.slider("tiempo de inversion (años)",min_value=1, max_value=5, value=st.session_state.tiempo)
-st.session_state.tiempo = tiempo
-  
-  
-st.subheader("Filtro de Conocimiento")
-p1 = st.radio("Inflación: $100 al 2% con inflación del 3%, ¿compras más o menos?", ["Más", "Menos", "Igual"])
-p2 = st.radio("Riesgo-Retorno: Inversión garantizada 20% mensual sin riesgo es:", ["Muy probable", "Estafa/Error", "Normal"])
-p3 = st.radio("Diversificación: ¿Una sola acción es más segura que un ETF?", ["Sí", "No"])
-p4 = st.radio("Estadística: Retorno 10% y Volatilidad 25%, ¿puedo perder dinero?", ["Sí", "No"])
+    return precios_simulados
 
-if st.button("🚀 Generar Portafolio", key="btn_generar"):
-    if nombre == "" or monto <= 0:
-        st.error("Por favor completa correctamente los datos.")
-    else:
+
+def generar_pdf(nombre, perfil, score, monto, p_ret, p_vol, evento, prob_p, peor_esc):
+
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", "B", 16)
+    pdf.cell(200, 10, txt="Reporte de Simulación Financiera", ln=True, align="C")
+    pdf.ln(10)
+    pdf.set_font("Arial", "B", 12)
+    pdf.cell(200, 10, txt=f"Inversionista: {nombre}", ln=True)
+    pdf.set_font("Arial", "", 11)
+    pdf.cell(200, 8, txt=f"Perfil: {perfil} | Score: {score}/4", ln=True)
+    pdf.cell(200, 8, txt=f"Capital Inicial: ${monto:,.2f}", ln=True)
+    pdf.ln(5)
+    pdf.cell(200, 8, txt=f"Retorno Esperado: {p_ret:.2%}", ln=True)
+    pdf.cell(200, 8, txt=f"Volatilidad: {p_vol:.2%}", ln=True)
+    pdf.cell(200, 8, txt=f"Escenario: {evento}", ln=True)
+    pdf.cell(200, 8, txt=f"Probabilidad de pérdida: {prob_p:.1f}%", ln=True)
+    pdf.cell(200, 8, txt=f"VaR 95%: ${abs(peor_esc):,.2f}", ln=True)
+
+    return pdf.output(dest="S").encode("latin-1")
+
+# SIDEBAR
+
+
+with st.sidebar:
+
+    st.header("Perfil del Inversor")
+
+    nombre = st.text_input("Nombre completo", value=st.session_state.nombre)
+    st.session_state.nombre = nombre
+
+    edad = st.number_input("Edad", min_value=18, max_value=100, value=st.session_state.edad)
+    st.session_state.edad = edad
+
+    monto = st.number_input("Cantidad a invertir (USD)", min_value=1000, max_value=1000000, value=st.session_state.monto)
+    st.session_state.monto = monto
+
+    tiempo = st.slider("Tiempo de inversión (años)", min_value=1, max_value=10, value=st.session_state.tiempo)
+    st.session_state.tiempo = tiempo
+
+    st.subheader("Filtro de Conocimiento")
+
+    p1 = st.radio("Inflación: $100 al 2% con inflación del 3%, ¿compras más o menos?", ["Más", "Menos", "Igual"])
+
+    p2 = st.radio("Riesgo-Retorno: Inversión garantizada 20% mensual sin riesgo es:", ["Muy probable", "Estafa/Error", "Normal"])
+
+    p3 = st.radio("Diversificación: ¿Una sola acción es más segura que un ETF?", ["Sí", "No"])
+
+    p4 = st.radio("Estadística: Retorno 10% y Volatilidad 25%, ¿puedo perder dinero?", ["Sí", "No"])
+
+    if st.button("🚀 Generar Portafolio"):
+
+        score = 0
+
+        if p1 == "Menos":
+            score += 1
+
+        if p2 == "Estafa/Error":
+            score += 1
+
+        if p3 == "No":
+            score += 1
+
+        if p4 == "Sí":
+            score += 1
+
+        st.session_state.score = score
+
+#Perfil
+
+        if score <= 1:
+
+            st.session_state.perfil = "Conservador"
+
+            st.session_state.tickers_sugeridos = ["BND", "TIP", "GLD", "VIG", "VTI"]
+
+        elif score <= 3:
+
+            st.session_state.perfil = "Balanceado"
+
+            st.session_state.tickers_sugeridos = ["SPY", "VEU", "BND", "VNQ", "IEMG"]
+
+        else:
+
+            st.session_state.perfil = "Arriesgado"
+
+            st.session_state.tickers_sugeridos = ["VWO", "BTC-USD", "SMH", "NVDA", "ETH-USD"]
+
         st.session_state.generado = True
-    
-    score = 0
-    if p1 == "Menos": score += 1
-    if p2 == "Estafa/Error": score += 1
-    if p3 == "No": score += 1
-    if p4 == "Sí": score += 1
-    st.session_state.score = score
 
-    # Determinación de Perfil
-    if score <= 1:
-        st.session_state.perfil = "Conservador"
-        st.session_state.tickers_sugeridos = ["BND", "TIP", "GLD", "VIG","VTI"] 
-    elif score <= 3:
-        st.session_state.perfil = "Balanceado"
-        st.session_state.tickers_sugeridos = ["SPY", "VEU", "BND", "VNQ","IEMG"] 
-    else:
-        st.session_state.perfil = "Arriesgado"
-        st.session_state.tickers_sugeridos = ["VWO", "BTC-USD", "SMH","NVDA","ETH-USD"] 
+        st.success(f"Perfil Determinado: {st.session_state.perfil}")
 
-    st.success(f"Perfil Determinado: **{st.session_state.perfil}**")
-    st.info(f"Nivel de conocimiento Financiero-estadistico: {st.session_state.score}/4")
+        st.info(f"Score financiero: {st.session_state.score}/4")
 
-# Protección de variables en session_state
-if "perfil" not in st.session_state:
-    st.session_state.perfil = None
-if "tickers_sugeridos" not in st.session_state:
-    st.session_state.tickers_sugeridos = []
-if "score" not in st.session_state:
-    st.session_state.score = 0
-  
-    
-# Control de ejecución
-if "generado" not in st.session_state:
-    st.session_state.generado = False
+# RESET
+
+if st.button("🔄 Reiniciar"):
+
+        for key in list(st.session_state.keys()):
+            del st.session_state[key]
+
+        st.rerun()
+
+# CONTROL DE EJECUCIÓN
 
 if not st.session_state.generado:
-    st.title("📊 Simulador de Portafolios")
-    st.info("Completa el formulario y presiona 'Generar Portafolio'")
-    st.stop()
-    perfil = st.session_state.perfil
-        
-if st.button("🔄 Reiniciar", key="btn_reset"):
-    st.session_state.generado = False
 
-# ==========================================
-# 2. SELECCIÓN DE ACTIVOS Y DATOS
-# ==========================================
-st.header(f"Portafolio Sugerido: {st.session_state.perfil}")
-tickers_input = st.text_input("Activos (separados por coma):", ",".join(st.session_state.tickers_sugeridos))
+    st.title("📊 Simulador de Portafolios")
+    st.info("Completa el formulario y presiona "  "'Generar Portafolio'")
+    st.stop()
+
+# VARIABLES PRINCIPALES
+
+perfil = st.session_state.perfil
+score = st.session_state.score
+
+#ACTIVOS
+
+st.title(f"Portafolio Sugerido: {perfil}")
+
+tickers_input = st.text_input("Activos (separados por coma)", ",".join(st.session_state.tickers_sugeridos))
+
 tickers = [t.strip() for t in tickers_input.split(",")]
 
+# DATOS HISTÓRICOS
+
 data = get_data(tickers)
-if data.empty:st.error("No se pudieron descargar datos válidos.")
-st.stop()
-data = data.dropna(axis=1, how='all')
+
+if data.empty:
+    st.error("No se pudieron descargar datos.")
+    st.stop()
+    
+data = data.dropna(axis=1, how="all")
 data = data.ffill()
 data = data.dropna()
+
 if data.empty:
-    st.error("Los datos descargados contienen demasiados valores faltantes.")
+    st.error("Datos inválidos.")
     st.stop()
+
 returns = data.pct_change().dropna()
 
-if not data.empty:
-    returns = data.pct_change().dropna()
-    mu = returns.mean() * 252
-    sigma = returns.std() * np.sqrt(252)
-    cov_matrix = returns.cov() * 252
-        
-    # Visualización de Crecimiento Relativo
+mu = returns.mean() * 252
+sigma = returns.std() * np.sqrt(252)
+cov_matrix = returns.cov() * 252
+
+# GRÁFICO HISTÓRICO
+
 st.subheader("📈 Comportamiento Histórico Relativo")
+
 data_norm = (data / data.iloc[0]) * 100
 fig_hist = go.Figure()
-for col in data_norm.columns:
-    fig_hist.add_trace(go.Scatter( x=data_norm.index, y=data_norm[col],mode='lines',name=col))
 
-fig_hist.update_layout(title="Comportamiento Histórico Relativo", xaxis_title="Fecha", yaxis_title="Base 100", template="plotly_dark", hovermode="x unified")
+for col in data_norm.columns:
+    fig_hist.add_trace(go.Scatter(x=data_norm.index, y=data_norm[col], mode="lines", name=col))
+
+fig_hist.update_layout(template="plotly_dark", hovermode="x unified")
 
 st.plotly_chart(fig_hist, use_container_width=True)
 
-    # --- BOTÓN DE OPTIMIZACIÓN AUTOMÁTICA ---
+# OPTIMIZACIÓN
+
 st.divider()
 st.subheader("⚖️ Optimización de Pesos")
-    
+
 col_opt, col_pesos = st.columns([1, 2])
-    
+
 with col_opt:
-    st.write("Calcula la distribución ideal para el menor riesgo posible.")
+    st.write("Calcula la distribución ideal "  "para minimizar riesgo.")
+
     if st.button("Optimizar para Mínima Varianza"):
         n = len(tickers)
         def p_vol(weights):
             return np.sqrt(np.dot(weights.T, np.dot(cov_matrix, weights)))
-            
-        constraints = ({'type': 'eq', 'fun': lambda x: np.sum(x) - 1})
+
+        constraints = ({"type": "eq", "fun": lambda x: np.sum(x) - 1})
         bounds = tuple((0, 1) for _ in range(n))
-        init_guess = n * [1./n]
-        optimized = minimize(p_vol, init_guess, method='SLSQP', bounds=bounds, constraints=constraints)
-        st.session_state['pesos'] = optimized.x
-        st.success("¡Optimización completada!")
-else:
-    if 'pesos' not in st.session_state:
-        st.session_state['pesos'] = np.array([1/len(tickers)] * len(tickers))
+        init_guess = n * [1 / n]
 
-        pesos = st.session_state['pesos']
-        pesos_df = pd.DataFrame({'Activo': tickers, 'Peso %': pesos * 100})
-    
+        optimized = minimize(p_vol, init_guess, method="SLSQP", bounds=bounds, constraints=constraints        )
+
+        st.session_state.pesos = optimized.x
+        st.success("Optimización completada.")
+
+if "pesos" not in st.session_state:
+
+    st.session_state.pesos = np.array([1 / len(tickers)] * len(tickers))
+
+pesos = st.session_state.pesos
+
+pesos_df = pd.DataFrame({"Activo": tickers, "Peso %": pesos * 100})
+
 with col_pesos:
-        fig_pie = px.pie(pesos_df, values='Peso %', names='Activo', title="Distribución del Capital")
-        st.plotly_chart(fig_pie, use_container_width=True)
 
-# Estadísticas Anualizadas
-mu = returns.mean() * 252
-sigma = returns.std() * np.sqrt(252)
-sharpe = mu / sigma.replace(0,np.nan)
+    fig_pie = px.pie(pesos_df, values="Peso %", names="Activo", title="Distribución del Capital")
+    st.plotly_chart(fig_pie, use_container_width=True)
+
+# ESTADÍSTICAS
+
+sharpe = mu / sigma.replace(0, np.nan)
 
 col1, col2 = st.columns(2)
 with col1:
     st.subheader("📊 Estadísticas Históricas")
-    stats_df = pd.DataFrame({"Retorno Anual (μ)": mu, "Volatilidad (σ)": sigma, "Eficiencia (Sharpe)": sharpe})
+    stats_df = pd.DataFrame({"Retorno Anual": mu, "Volatilidad": sigma, "Sharpe": sharpe})
     st.table(stats_df)
 
 with col2:
-    st.subheader("🔥 Mapa de Correlaciones")
-    fig_corr = px.imshow(returns.corr(), text_auto=True, color_continuous_scale='RdBu_r')
+    st.subheader("🔥 Correlaciones")
+    fig_corr = px.imshow(returns.corr(), text_auto=True, color_continuous_scale="RdBu_r")
     st.plotly_chart(fig_corr, use_container_width=True)
 
-# ==========================================
-# 3. ESCENARIOS DE ESTRÉS
-# ==========================================
+# ESCENARIOS DE ESTRÉS
+
 st.divider()
-st.header("SIMULADOR DE CRISIS y RESILIENCIA")
-st.write("Selecciona un evento para ver la resiliencia de tu portafolio:")
-c_s1, c_s2, c_s3, c_s4 = st.columns(4)
+st.header("Simulador de Crisis")
+c1, c2, c3, c4 = st.columns(4)
 
-if "shock_mu" not in st.session_state:
-    st.session_state.shock_mu = 0.0
-    st.session_state.shock_sigma = 1.0
-    st.session_state.shock_corr = 0.0
-    st.session_state.nombre_evento = "Normal"
+with c1:
 
-with c_s1:
     if st.button("Guerra Mundial"):
         st.session_state.shock_mu = -0.20
         st.session_state.shock_sigma = 1.8
         st.session_state.shock_corr = 0.4
         st.session_state.nombre_evento = "Guerra Mundial"
 
-with c_s2:
+with c2:
     if st.button("Pandemia"):
         st.session_state.shock_mu = -0.12
         st.session_state.shock_sigma = 3.0
         st.session_state.shock_corr = 0.5
         st.session_state.nombre_evento = "Pandemia"
 
-with c_s3:
-    if st.button("🏗️ Aranceles"):
+with c3:
+    if st.button("Aranceles"):
         st.session_state.shock_mu = -0.05
         st.session_state.shock_sigma = 1.5
         st.session_state.shock_corr = 0.3
         st.session_state.nombre_evento = "Choque Arancelario"
 
-with c_s4:
-    if st.button("🔄 Reset"):
+with c4:
+    if st.button("Reset Escenario"):
         st.session_state.shock_mu = 0.0
         st.session_state.shock_sigma = 1.0
         st.session_state.shock_corr = 0.0
@@ -252,141 +309,208 @@ shock_sigma = st.session_state.shock_sigma
 shock_corr = st.session_state.shock_corr
 nombre_evento = st.session_state.nombre_evento
 
-st.write(f"Escenario Activo: **{nombre_evento}**")
-  
-# ==========================================
-# 4. SIMULACIÓN MONTE CARLO (1 AÑO)
-# ==========================================
-def monte_carlo_vectorizado(monto_inicial, mu_sim, vol_sim, simulaciones=10000, dias=252):
-    # Generación de matriz de retornos aleatorios de una sola vez
-    rets_sim = np.random.normal(
-        (mu_sim / dias), 
-        (vol_sim / np.sqrt(dias)), 
-        (dias, simulaciones)
-    )
-    # Producto acumulado por columnas (axis=0)
-    precios_simulados = monto_inicial * (1 + rets_sim).cumprod(axis=0)
-    return precios_simulados
+st.write(f"Escenario activo: {nombre_evento}")
 
-# Ajuste de parámetros por Stress Test
+# MONTE CARLO
 
 p_ret_hist = np.dot(pesos, mu)
 p_vol_hist = np.sqrt(np.dot(pesos.T, np.dot(cov_matrix, pesos)))
-
-monto_inicial = monto
-score_conocimiento = st.session_state.score
-
 mu_sim = p_ret_hist + shock_mu
-vol_sim = p_vol_hist * shock_sigma + (shock_corr * 0.1)
+vol_sim = (p_vol_hist * shock_sigma + (shock_corr * 0.1))
 
-with st.spinner('Procesando 10,000 escenarios estocásticos...'):
-        resultados = monte_carlo_vectorizado(monto, mu_sim, vol_sim)
+with st.spinner("Procesando simulaciones..."):
 
-st.subheader(f"📊 Proyección a 1 año: Escenario {nombre_evento}")
+    resultados = monte_carlo_vectorizado(monto, mu_sim, vol_sim)
+
+# GRÁFICOS MONTE CARLO
+
+st.subheader(f"📊 Proyección a 1 año - {nombre_evento}")
 
 col_g1, col_g2 = st.columns([2, 1])
 
 with col_g1:
     fig_mc = go.Figure()
     for i in range(50):
-        fig_mc.add_trace(go.Scatter(y=resultados[:, i], mode='lines', opacity=0.3, showlegend=False))
-    st.plotly_chart(fig_mc, use_container_width=True)
+        fig_mc.add_trace(go.Scatter(y=resultados[:, i], mode="lines", opacity=0.3, showlegend=False))
+
+    st.plotly_chart(fig_mc,use_container_width=True)
 
 with col_g2:
-    precios_finales = resultados[-1, :]
-    fig_hist = px.histogram(precios_finales, nbins=10, title="Distribución de Valor Final")
-    st.plotly_chart(fig_hist, use_container_width=True)
 
-# ==========================================
-# 5. DASHBOARD DE INTERPRETACIÓN
-# ==========================================
+    precios_finales = resultados[-1, :]
+    fig_dist = px.histogram(precios_finales, nbins=30, title="Distribución Final")
+
+    st.plotly_chart(fig_dist, use_container_width=True)
+
+# INFORME DE RIESGO
+
 prob_p = (np.sum(precios_finales < monto) / len(precios_finales)) * 100
-var_95 = np.percentile(precios_finales, 5) - monto
+var_95 = (np.percentile(precios_finales, 5) - monto)
 
 st.subheader("Informe de Resiliencia")
-prob_perdida = prob_p
-peor_escenario = var_95
+col_r1, col_r2 = st.columns(2)
 
-col_res1, col_res2 = st.columns(2)
+with col_r1:
 
-if prob_p > 30:
-    st.error(f"⚠️ Probabilidad de pérdida: {prob_p:.1f}% | Riesgo de caída (VaR 95%): ${abs(var_95):,.2f}")
-else:
-     st.success(f"✅ Probabilidad de pérdida: {prob_p:.1f}% | Portafolio Robusto.")
-    
-with col_res1:
-    st.subheader("🚦 Semáforo de Riesgo")
-    if prob_perdida > 40:
-        st.error(f"RIESGO CRÍTICO: Hay un {prob_perdida:.1f}% de probabilidad de terminar en pérdida bajo este escenario.")
-    elif prob_perdida > 20:
-        st.warning(f"RIESGO MEDIO: Probabilidad de pérdida del {prob_perdida:.1f}%.")
+    if prob_p > 40:
+        st.error(f"RIESGO CRÍTICO: {prob_p:.1f}%")
+
+    elif prob_p > 20:
+        st.warning(f"RIESGO MEDIO: {prob_p:.1f}%")
+
     else:
-        st.success(f"RIESGO BAJO: Portafolio resiliente con solo {prob_perdida:.1f}% de prob. de pérdida.")
-if not data.empty:
-    
-    with col_res2:
-        st.subheader("🔍 Interpretación de resultados")
-        st.write(f"**Incertidumbre:** Tu volatilidad ajustada es de **{vol_sim:.2%}**. Esto significa que el valor de tu dinero podría oscilar violentamente en un año.")
-        st.write(f"**Pronóstico:** En el peor 5% de los casos, podrías perder **${abs(peor_escenario):,.2f}**.")
-        st.write(f"**Eficiencia:** Tu Ratio de Sharpe indica qué tan bien se te paga por el susto que pasas al invertir.")
-else:
-    st.warning("Por favor, ingresa tickers válidos para comenzar el análisis.")
+        st.success(f"RIESGO BAJO: {prob_p:.1f}%")
 
-from fpdf import FPDF
-import base64
+with col_r2:
 
-def generar_pdf(nombre, perfil, score, monto, p_ret, p_vol, evento, prob_p, peor_esc):
-    pdf = FPDF()
-    pdf.add_page()
-    
-    # Encabezado
-    pdf.set_font("Arial", 'B', 16)
-    pdf.cell(200, 10, txt="Reporte de Simulación Financiera - Proyecto Semillero", ln=True, align='C')
-    pdf.ln(10)
-    
-    # Datos del Usuario
-    pdf.set_font("Arial", 'B', 12)
-    pdf.cell(200, 10, txt=f"Inversionista: {nombre}", ln=True)
-    pdf.set_font("Arial", '', 11)
-    pdf.cell(200, 8, txt=f"Perfil Determinado: {perfil} (Sabiduria: {score}/4)", ln=True)
-    pdf.cell(200, 8, txt=f"Capital Inicial: ${monto:,.2f} USD", ln=True)
-    pdf.ln(5)
-    
-    # Estadísticas del Portafolio
-    pdf.set_font("Arial", 'B', 12)
-    pdf.cell(200, 10, txt="Métricas de Desempeño Histórico:", ln=True)
-    pdf.set_font("Arial", '', 11)
-    pdf.cell(200, 8, txt=f"- Retorno Esperado Anual: {p_ret:.2%}", ln=True)
-    pdf.cell(200, 8, txt=f"- Volatilidad (Riesgo): {p_vol:.2%}", ln=True)
-    pdf.ln(5)
-    
-    # Resultados del Escenario de Estrés
-    pdf.set_font("Arial", 'B', 12)
-    pdf.cell(200, 10, txt=f"Análisis de Resiliencia (Escenario: {evento})", ln=True)
-    pdf.set_font("Arial", '', 11)
-    pdf.cell(200, 8, txt=f"- Probabilidad de terminar en pérdida: {prob_p:.1f}%", ln=True)
-    pdf.cell(200, 8, txt=f"- Máxima pérdida estimada (peor 5%): ${abs(peor_esc):,.2f}", ln=True)
-    pdf.ln(10)
-    
-    # Conclusión
-    pdf.set_font("Arial", 'I', 11)
-    msg = "Este reporte es una simulacion basada en datos historicos y metodos de Monte Carlo. No constituye asesoria financiera legal."
-    pdf.multi_cell(0, 10, txt=msg)
-    
-    return pdf.output(dest='S').encode('latin-1')
+    st.subheader("Interpretación")
+    st.write(f"Volatilidad ajustada: {vol_sim:.2%}")
+    st.write(f"VaR 95%: ${abs(var_95):,.2f}")
 
-# --- BOTÓN DE DESCARGA EN LA INTERFAZ ---
+# EXPORTAR PDF
+
 st.divider()
 st.subheader("Exportar Resultados")
 
-pdf_bytes = generar_pdf(
-    nombre, perfil, score, monto_inicial, 
-    p_ret_hist, p_vol_hist, nombre_evento, prob_perdida, peor_escenario
-)
+pdf_bytes = generar_pdf(nombre, perfil, score, monto, p_ret_hist, p_vol_hist, nombre_evento, prob_p, var_95)
 
-st.download_button(
-    label="📄 Descargar Reporte en PDF",
-    data=pdf_bytes,
-    file_name=f"Reporte_Inversion_{nombre}.pdf",
-    mime="application/pdf"
-)
+st.download_button(    label="📄 Descargar PDF", data=pdf_bytes, file_name=f"Reporte_{nombre}.pdf", mime="application/pdf")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
