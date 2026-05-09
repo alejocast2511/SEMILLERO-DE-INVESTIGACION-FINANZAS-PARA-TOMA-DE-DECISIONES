@@ -16,7 +16,7 @@ import yfinance as yf
 import pandas as pd
 import numpy as np
 import plotly.express as px
-import plotly.graph_objects as go
+import plotly.graph_objects as go 
 from datetime import datetime, timedelta
 from fpdf import FPDF
 from scipy.optimize import minimize
