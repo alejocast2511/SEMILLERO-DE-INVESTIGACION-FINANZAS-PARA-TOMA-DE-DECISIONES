@@ -246,7 +246,7 @@ with col_opt:
     pesos = st.session_state.pesos
     pesos_df = pd.DataFrame({"Activo": tickers, "Peso %": pesos * 100})
 
-    st.write("---")
+    st.divider()
     st.markdown("**Resultados detallados:**")
     for index, row in pesos_df.iterrows():
         # Muestra cada activo con su porcentaje formateado a 2 decimales
