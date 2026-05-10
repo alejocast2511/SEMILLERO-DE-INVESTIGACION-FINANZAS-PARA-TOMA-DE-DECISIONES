@@ -272,7 +272,7 @@ with col2:
 # ESCENARIOS DE ESTRÉS
 
 st.divider()
-st.header("Simulador de Crisis")
+st.header("Simulaciones")
 c1, c2, c3, c4 = st.columns(4)
 
 with c1:
