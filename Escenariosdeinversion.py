@@ -80,7 +80,6 @@ def generar_pdf(nombre, perfil, score, monto, p_ret, p_vol, evento, prob_p, peor
 
 # SIDEBAR
 
-
 with st.sidebar:
 
     st.header("Perfil del Inversor")
@@ -242,12 +241,16 @@ with col_opt:
         st.success("Optimización completada.")
 
 if "pesos" not in st.session_state:
-
     st.session_state.pesos = np.array([1 / len(tickers)] * len(tickers))
 
 pesos = st.session_state.pesos
-
 pesos_df = pd.DataFrame({"Activo": tickers, "Peso %": pesos * 100})
+
+st.write("---")
+    st.markdown("**Resultados detallados:**")
+    for index, row in pesos_df.iterrows():
+        # Muestra cada activo con su porcentaje formateado a 2 decimales
+        st.write(f"**{row['Activo']}:** {row['Peso %']:.2f}%")
 
 with col_pesos:
 
