@@ -240,13 +240,13 @@ with col_opt:
         st.session_state.pesos = optimized.x
         st.success("Optimización completada.")
 
-if "pesos" not in st.session_state:
-    st.session_state.pesos = np.array([1 / len(tickers)] * len(tickers))
+    if "pesos" not in st.session_state:
+        st.session_state.pesos = np.array([1 / len(tickers)] * len(tickers))
 
-pesos = st.session_state.pesos
-pesos_df = pd.DataFrame({"Activo": tickers, "Peso %": pesos * 100})
+    pesos = st.session_state.pesos
+    pesos_df = pd.DataFrame({"Activo": tickers, "Peso %": pesos * 100})
 
-st.write("---")
+    st.write("---")
     st.markdown("**Resultados detallados:**")
     for index, row in pesos_df.iterrows():
         # Muestra cada activo con su porcentaje formateado a 2 decimales
