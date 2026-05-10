@@ -261,7 +261,7 @@ sharpe = mu / sigma.replace(0, np.nan)
 col1, col2 = st.columns(2)
 with col1:
     st.subheader("📊 Estadísticas Históricas")
-    stats_df = pd.DataFrame({"Retorno Anual": mu, "Volatilidad": sigma, "Sharpe": sharpe})
+    stats_df = pd.DataFrame({"Retorno Anual":mu, "Volatilidad":sigma, "Sharpe":sharpe})
     st.table(stats_df)
 
 with col2:
