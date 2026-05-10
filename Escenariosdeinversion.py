@@ -266,7 +266,7 @@ with col1:
 
 with col2:
     st.subheader("🔥 Correlaciones")
-    fig_corr = px.imshow(returns.corr(), text_auto=False, color_continuous_scale="RdBu_r")
+    fig_corr = px.imshow(returns.corr(), text_auto=True, color_continuous_scale="RdBu_r")
     st.plotly_chart(fig_corr, use_container_width=True)
 
 # ESCENARIOS DE ESTRÉS
