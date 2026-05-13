@@ -130,19 +130,19 @@ with st.sidebar:
 
             st.session_state.perfil = "Conservador"
 
-            st.session_state.tickers_sugeridos = ["BND", "TIP", "GLD", "VIG", "VTI"]
+            st.session_state.tickers_sugeridos = ["BND", "TIP", "GLD", "APPL", "VTI"]
 
         elif score <= 3:
 
             st.session_state.perfil = "Balanceado"
 
-            st.session_state.tickers_sugeridos = ["SPY", "VEU", "BND", "VNQ", "IEMG"]
+            st.session_state.tickers_sugeridos = ["SPY", "VEU", "BND", "GOOGL", "IEMG"]
 
         else:
 
             st.session_state.perfil = "Arriesgado"
 
-            st.session_state.tickers_sugeridos = ["VWO", "BTC-USD", "SMH", "NVDA", "ETH-USD"]
+            st.session_state.tickers_sugeridos = ["TSLA", "BTC-USD", "SMH", "NVDA", "ETH-USD"]
 
         st.session_state.generado = True
 
