@@ -230,7 +230,8 @@ with col_opt:
     )
 
 # Calcular rendimientos diarios
-    returns = data["Adj Close"].pct_change().dropna()
+    price_column = "Adj Close" if "Adj Close" in data.columns else "Close"
+    returns = data[price_column].pct_change().dropna()
 
 # Calcular retornos esperados anualizados
     expected_returns = (returns.mean() * 252).values.flatten()
