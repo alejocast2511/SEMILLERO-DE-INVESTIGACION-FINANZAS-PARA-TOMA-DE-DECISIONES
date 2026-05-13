@@ -130,13 +130,13 @@ with st.sidebar:
 
             st.session_state.perfil = "Conservador"
 
-            st.session_state.tickers_sugeridos = ["BND", "TIP", "GLD", "APPL", "VTI"]
+            st.session_state.tickers_sugeridos = ["BND", "TIP", "GLD", "VIG", "VTI"]
 
         elif score <= 3:
 
             st.session_state.perfil = "Balanceado"
 
-            st.session_state.tickers_sugeridos = ["SPY", "VEU", "BND", "GOOGL", "IEMG"]
+            st.session_state.tickers_sugeridos = ["SPY", "VEU", "BND", "VNQ", "IEMG"]
 
         else:
 
