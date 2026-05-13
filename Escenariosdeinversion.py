@@ -229,6 +229,9 @@ with col_opt:
         "para maximizar el Ratio Sharpe (mejor relación entre retorno y riesgo)."
     )
 
+expected_returns = np.array(expected_returns).flatten()
+cov_matrix = np.array(cov_matrix)
+
     if st.button("Optimizar para Máximo Sharpe"):
         n = len(tickers)
 
