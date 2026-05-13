@@ -229,14 +229,14 @@ with col_opt:
         "para maximizar el Ratio Sharpe (mejor relación entre retorno y riesgo)."
     )
 
-    # Calcular rendimientos diarios
-returns = data["Adj Close"].pct_change().dropna()
+# Calcular rendimientos diarios
+    returns = data["Adj Close"].pct_change().dropna()
 
 # Calcular retornos esperados anualizados
-expected_returns = (returns.mean() * 252).values.flatten()
+    expected_returns = (returns.mean() * 252).values.flatten()
 
 # Calcular matriz de covarianza anualizada
-cov_matrix = (returns.cov() * 252).values
+    cov_matrix = (returns.cov() * 252).values
 
     if st.button("Optimizar para Máximo Sharpe"):
         n = len(tickers)
