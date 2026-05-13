@@ -224,37 +224,125 @@ st.subheader("⚖️ Optimización de Pesos")
 col_opt, col_pesos = st.columns([1, 2])
 
 with col_opt:
-    st.write("Calcula la distribución ideal "  "para minimizar riesgo.")
+    st.write(
+        "Calcula la distribución ideal del portafolio "
+        "para maximizar el Ratio Sharpe (mejor relación entre retorno y riesgo)."
+    )
 
-    if st.button("Optimizar para Mínima Varianza"):
+    if st.button("Optimizar para Máximo Sharpe"):
         n = len(tickers)
-        def p_vol(weights):
-            return np.sqrt(np.dot(weights.T, np.dot(cov_matrix, weights)))
 
-        constraints = ({"type": "eq", "fun": lambda x: np.sum(x) - 1})
+        # Tasa libre de riesgo anual (puedes ajustarla según tu criterio)
+        risk_free_rate = 0.05  # 5%
+
+        # Función objetivo: negativo del Sharpe Ratio
+        # Se utiliza negativo porque scipy.optimize.minimize() minimiza.
+        def negative_sharpe(weights):
+            # Retorno esperado del portafolio
+            portfolio_return = np.dot(weights, expected_returns)
+
+            # Volatilidad del portafolio
+            portfolio_volatility = np.sqrt(
+                np.dot(weights.T, np.dot(cov_matrix, weights))
+            )
+
+            # Evitar división por cero
+            if portfolio_volatility == 0:
+                return 1e6
+
+            # Cálculo del Ratio Sharpe
+            sharpe_ratio = (
+                portfolio_return - risk_free_rate
+            ) / portfolio_volatility
+
+            # Retornamos el negativo para maximizar Sharpe
+            return -sharpe_ratio
+
+        # Restricción: la suma de los pesos debe ser 100%
+        constraints = (
+            {"type": "eq", "fun": lambda x: np.sum(x) - 1},
+        )
+
+        # Restricción de pesos entre 0% y 100% (sin ventas en corto)
         bounds = tuple((0, 1) for _ in range(n))
-        init_guess = n * [1 / n]
 
-        optimized = minimize(p_vol, init_guess, method="SLSQP", bounds=bounds, constraints=constraints        )
+        # Pesos iniciales iguales
+        init_guess = np.array([1 / n] * n)
 
+        # Optimización
+        optimized = minimize(
+            negative_sharpe,
+            init_guess,
+            method="SLSQP",
+            bounds=bounds,
+            constraints=constraints
+        )
+
+        # Guardar pesos óptimos
         st.session_state.pesos = optimized.x
-        st.success("Optimización completada.")
 
+        # Calcular métricas del portafolio óptimo
+        portfolio_return = np.dot(optimized.x, expected_returns)
+        portfolio_volatility = np.sqrt(
+            np.dot(optimized.x.T, np.dot(cov_matrix, optimized.x))
+        )
+        sharpe_ratio = (
+            portfolio_return - risk_free_rate
+        ) / portfolio_volatility
+
+        # Guardar métricas en session_state (opcional)
+        st.session_state.opt_return = portfolio_return
+        st.session_state.opt_volatility = portfolio_volatility
+        st.session_state.opt_sharpe = sharpe_ratio
+
+        st.success("Optimización por Máximo Sharpe completada.")
+
+    # Inicializar pesos si no existen
     if "pesos" not in st.session_state:
-        st.session_state.pesos = np.array([1 / len(tickers)] * len(tickers))
+        st.session_state.pesos = np.array(
+            [1 / len(tickers)] * len(tickers)
+        )
 
+    # DataFrame de resultados
     pesos = st.session_state.pesos
-    pesos_df = pd.DataFrame({"Activo": tickers, "Peso %": pesos * 100})
+    pesos_df = pd.DataFrame({
+        "Activo": tickers,
+        "Peso %": pesos * 100
+    })
+
+    # Mostrar métricas si ya fueron calculadas
+    if "opt_return" in st.session_state:
+        st.divider()
+        st.markdown("### 📈 Métricas del Portafolio Óptimo")
+        st.write(
+            f"**Retorno Esperado Anual:** "
+            f"{st.session_state.opt_return:.2%}"
+        )
+        st.write(
+            f"**Volatilidad Anual:** "
+            f"{st.session_state.opt_volatility:.2%}"
+        )
+        st.write(
+            f"**Ratio Sharpe:** "
+            f"{st.session_state.opt_sharpe:.2f}"
+        )
 
     st.divider()
-    st.markdown("**Resultados detallados:**")
-    for index, row in pesos_df.iterrows():
-        # Muestra cada activo con su porcentaje formateado a 2 decimales
-        st.write(f"**{row['Activo']}:** {row['Peso %']:.2f}%")
+    st.markdown("### 📊 Resultados Detallados")
+
+    for _, row in pesos_df.iterrows():
+        st.write(
+            f"**{row['Activo']}:** "
+            f"{row['Peso %']:.2f}%"
+        )
 
 with col_pesos:
-
-    fig_pie = px.pie(pesos_df, values="Peso %", names="Activo", title="Distribución del Capital")
+    fig_pie = px.pie(
+        pesos_df,
+        values="Peso %",
+        names="Activo",
+        title="Distribución Óptima del Capital"
+    )
     st.plotly_chart(fig_pie, use_container_width=True)
 
 # ESTADÍSTICAS
