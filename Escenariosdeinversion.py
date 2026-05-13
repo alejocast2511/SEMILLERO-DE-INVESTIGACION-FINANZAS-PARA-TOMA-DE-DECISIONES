@@ -26,7 +26,7 @@ from scipy.optimize import minimize
 st.set_page_config(page_title="DACS-Quant: Gestión de Portafolios", layout="wide")
 
 #
-defaults = {"nombre": "Inversionista", "edad": 25, "monto": 10000, "tiempo": 5, "perfil": None,  "score": 0, "tickers_sugeridos": [], 
+defaults = {"nombre": "Inversionista", "edad": 25, "monto": 10000, "tiempo": 3, "perfil": None,  "score": 0, "tickers_sugeridos": [], 
             "generado": False, "shock_mu": 0.0, "shock_sigma": 1.0, "shock_corr": 0.0, "nombre_evento": "Normal"}
 
 for key, value in defaults.items():
@@ -93,7 +93,7 @@ with st.sidebar:
     monto = st.number_input("Cantidad a invertir (USD)", min_value=1000, max_value=1000000, value=st.session_state.monto)
     st.session_state.monto = monto
 
-    tiempo = st.slider("Tiempo de inversión (años)", min_value=1, max_value=10, value=st.session_state.tiempo)
+    tiempo = st.slider("Tiempo de inversión (años)", min_value=1, max_value=5, value=st.session_state.tiempo)
     st.session_state.tiempo = tiempo
 
     st.subheader("Filtro de Conocimiento")
